@@ -1,0 +1,45 @@
+
+---
+title: "create sample sheet for diffBind"
+author: "Javier Rodriguez Hernaez"
+output: flexdashboard::flex_dashboard
+---
+
+```{r setup, include=FALSE}
+input_dir="/Users/javrodher/Work/RStudio-PRJs/PTCL-project_2023/data/hichip-chip_peaks/"
+peakome_file="/Users/javrodher/Work/RStudio-PRJs/PTCL-project_2023/data/peakome_tiled.bed"
+ss_file="samples.diffBind.csv"
+bam_suffix = "chip_sorted.bam"
+peak_suffix = "chip_peaks.broadPeak"
+n_cores=8
+
+options(scipen = 999)
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE, results = FALSE)
+knitr::opts_knit$set(root.dir = output_dir)
+```
+
+```{r}
+bams_files = list.files(input_dir,pattern = paste0(bam_suffix,"$"),full.names = F,include.dirs = F,recursive = T)
+peak_files = list.files(input_dir,pattern = paste0(peak_suffix,"$"),full.names = F,include.dirs = F,recursive = T)
+
+sampleName_bams=gsub(bams_files,pattern="/chip_sorted.bam",replacement = "")
+sampleName_peaks=gsub(peak_files,pattern="/chip_peaks.broadPeak",replacement = "")
+sampleName = sampleName_bams[sampleName_bams %in% sampleName_peaks]
+
+if(peakome_file!=F){ peak_files = peakome_file } else { peak_files = paste0(input_dir,"/",peak_files) }
+bam_files = paste0(input_dir,"/",bams_files)
+
+ss=data.frame(SampleID=sampleName,
+              Tissue=NA,
+              Factor=NA,
+              Condition=NA,
+              Treatment=NA,
+              Replicate=NA,
+              bamReads=bam_files,
+              Peaks=peak_files,
+              PeakCaller = "bed",stringsAsFactors = F)
+print(ss)
+write.csv(ss,paste0(input_dir,"/samples.diffBind.csv"),row.names = F)
+```
+
+

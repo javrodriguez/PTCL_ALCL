@@ -1,0 +1,93 @@
+---
+title: "pca diffBind"
+author: "Javier Rodriguez Hernaez"
+output: flexdashboard::flex_dashboard
+---
+
+```{r setup, include=FALSE}
+input_dir="/Users/javrodher/Work/RStudio-PRJs/PTCL-project_2023/data/hichip-chip_peaks/"
+output_dir="/Users/javrodher/Work/RStudio-PRJs/PTCL-project_2023/results/"
+peakome_file="/Users/javrodher/Work/RStudio-PRJs/PTCL-project_2023/data/peakome_tiled.bed"
+ss_file="samples.diffBind.csv"
+n_cores=8
+
+options(scipen = 999)
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=FALSE, results = FALSE)
+knitr::opts_knit$set(root.dir = output_dir)
+```
+
+```{r}
+### FUNCTIONS ###
+FX1=function(sample_sheet,out_name,n_cores=1,peakome,stats_out=F){
+  # sample_sheet=ss
+  # out_name="all"
+  # n_cores = n_cores
+  # stats_out=T
+      
+  dba_data = dba(sampleSheet=sample_sheet,  minOverlap=0,filter=0, bRemoveM=F)
+  print(dba_data)
+  dba_data$config$cores = n_cores
+  dba_data = dba.count(dba_data,peaks=peakome,
+                     minOverlap=0,
+                     bUseSummarizeOverlaps = F,
+                     bParallel = T,
+                     filter=0,
+                     summits = 0)
+  dba_data = dba.normalize(dba_data,normalize=DBA_NORM_LIB,bFullLibrarySize=TRUE)
+  count_data=as.data.frame(dba_data$peaks)
+  count_data=count_data[,c(1:3,grep("^RPKM",names(count_data))) ]
+  names(count_data)[4:ncol(count_data)] = paste0(dba_data$samples$SampleID,".RPKM")
+  count_data$coord=paste(count_data$Chr,count_data$Start,count_data$End,sep=":")
+  if((sum(count_data$coord %in% peakome$coord)==nrow(count_data)) !=TRUE) { print("ERROR")}
+  count_data=count_data[order(count_data$coord),]
+  peakome=peakome[order(peakome$coord),]
+  count_data$PEAK_ID=peakome$PEAK_ID
+  count_data=count_data[,c(ncol(count_data),1:(ncol(count_data)-2))]
+  write.csv(count_data,paste0(output_dir,"/counts_normLib_",out_name,".csv"),row.names = F)
+
+  stats=dba.show(dba_data)
+  print(stats)
+  pdf(paste0(output_dir,"/pca_",out_name,".pdf"))
+  dba.plotPCA(dba_data,attributes = DBA_TISSUE,label="ID",labelSize=0.5)
+  dev.off()
+  
+  if(stats_out) {return(stats)}
+}
+
+
+```
+
+```{r}
+library(DiffBind)
+ss = read.csv(paste0(input_dir,"/",ss_file))
+ss[is.na(ss)]=0
+
+# customize sample sheet
+ss = ss[-c(10,13),]
+ss$SampleID=gsub(x=ss$SampleID,pattern="-Arima-rep1|-untreated|-DMSO|-Naive|_NOS",replacement = "",fixed = F)
+ss$SampleID=gsub(x=ss$SampleID,pattern="-Arima-rep1",replacement = "")
+
+# load peakome
+peakome=read.delim(peakome_file,stringsAsFactors = F,header = F)
+peakome=peakome[,1:4]
+names(peakome)=c("chr","start","end","PEAK_ID")
+peakome$coord=paste(peakome$chr,peakome$start,peakome$end,sep = ":")
+```
+
+```{r}
+stats=FX1(sample_sheet=ss,
+      out_name="all",
+      n_cores = n_cores,
+      peakome,
+      stats_out=T)
+
+write.csv(stats,paste0(output_dir,"/stats_diffBind.csv"),row.names = F,quote=F)
+```
+
+```{r}
+FX1(sample_sheet=ss[ss$SampleID!="IL2",],
+      out_name="noIL2",
+      n_cores = n_cores,
+      peakome,
+      stats_out=F)
+```

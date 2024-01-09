@@ -65,7 +65,6 @@ ss[is.na(ss)]=0
 # customize sample sheet
 ss = ss[-c(10,13),]
 ss$SampleID=gsub(x=ss$SampleID,pattern="-Arima-rep1|-untreated|-DMSO|-Naive|_NOS",replacement = "",fixed = F)
-ss$SampleID=gsub(x=ss$SampleID,pattern="-Arima-rep1",replacement = "")
 
 # load peakome
 peakome=read.delim(peakome_file,stringsAsFactors = F,header = F)

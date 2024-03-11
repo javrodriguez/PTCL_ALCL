@@ -183,6 +183,5 @@ extract_hic=T
 compute_scores=T
 save_target=T
 
-#sample_names = list.dirs(wd,full.names = F,recursive = F)
-sample_names = c("PANC1","GM12878","HCT116","HEPG2","IMR90","K562","MCF7")
+sample_names = c("DNO3")
 main(n_cores=n_cores,extract_hic=extract_hic,compute_scores=compute_scores,save_target=save_target)

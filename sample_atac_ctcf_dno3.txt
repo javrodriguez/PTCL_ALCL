@@ -1,0 +1,1 @@
+DNO3	/gpfs/data/abl/home/rodrij92/DNO3_TRAIN_C.ORIGAMI/atac/BIGWIG/DNO3_ATAC_merge.bin1.rpkm.bw	/gpfs/data/abl/home/rodrij92/DNO3_TRAIN_C.ORIGAMI/ctcf/BIGWIG/EB_DN03_ChIP_CTCF_merge.bin1.rpkm.bw
